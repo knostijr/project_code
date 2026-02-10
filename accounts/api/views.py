@@ -89,3 +89,58 @@ class LoginView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserProfileSerializer
+
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    """
+    API view to retrieve or update a user profile.
+
+    GET   /api/profile/<pk>/  - retrieve any profile (auth required)
+    PATCH /api/profile/<pk>/  - update only own profile (owner check)
+    """
+
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """
+        For PATCH: ensure users can only update their own profile.
+        For GET: allow retrieving any profile.
+        """
+        instance = super().get_object()
+        if self.request.method in ['PUT', 'PATCH']:
+            if instance != self.request.user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You can only update your own profile.")
+        return instance
+
+
+class ProfileBusinessView(generics.ListAPIView):
+    """
+    GET /api/profiles/business/
+    Lists all business user profiles. Requires authentication.
+    """
+
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(type='business')
+
+
+class ProfileCustomerView(generics.ListAPIView):
+    """
+    GET /api/profiles/customer/
+    Lists all customer user profiles. Requires authentication.
+    """
+
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(type='customer')

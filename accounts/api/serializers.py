@@ -76,3 +76,29 @@ class LoginSerializer(serializers.Serializer):
         write_only=True,
         style={'input_type': 'password'}
     )
+    
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for reading and updating user profile.
+
+    Excludes sensitive fields like password.
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'type',
+            'location',
+            'tel',
+            'description',
+            'working_hours',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
